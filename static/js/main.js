@@ -867,16 +867,11 @@ define("main", ["domReady!", "mandelicu", "d3", "showdown"], (doc, mandelicu, d3
 // upload pics for note?
 // flag display -- consider third "my post was flagged" button
 
-
 // write notes on edible species
 // finish missing wiki links and thumbs
 // trail: trees of mark twain's acquaintance (*who knows?)
 
-
 // github
-// dns, server, forever
-// name e.g. BfloTrees(.com)
-
 
 // retest notes and flagging, for tree and species
 
