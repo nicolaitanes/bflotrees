@@ -1,6 +1,6 @@
 {
-    "name": "Trees",
-    "short_name": "Trees",
+    "name": "BfloTrees",
+    "short_name": "BfloTrees",
     "manifest_version": 1,
     "author": "Christopher Nicolai",
     "icons": [
