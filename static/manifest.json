@@ -1,0 +1,25 @@
+{
+    "name": "Trees",
+    "short_name": "Trees",
+    "manifest_version": 1,
+    "author": "Christopher Nicolai",
+    "icons": [
+        {
+            "src": "trees-300px.png",
+            "sizes": "300x300",
+            "type": "image/png"
+        },
+        {
+            "src": "trees-600px.png",
+            "sizes": "600x600",
+            "type": "image/png"
+        }
+    ],
+    "scope": "/trees/",
+    "start_url": "index.html",
+    "offline_enabled": true,
+    "orientation": "any",
+    "display": "standalone",
+    "background_color": "#111",
+    "theme_color": "#111"
+}

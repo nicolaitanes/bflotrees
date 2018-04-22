@@ -1,0 +1,232 @@
+<!DOCTYPE html> 
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Trees - mandelics.com</title>
+    <meta name="viewport" content="initial-scale=1, width=device-width">
+    <meta name="theme-color" content="#111">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" type="text/css" href="css/leaflet.css" />
+    <link rel="icon" type="image/png" href="trees-300px.png" />
+    <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript" src="js/leaflet.js"></script>
+    <script type="text/javascript" src="js/require.js"></script>
+    <script type="text/javascript">
+window.addEventListener('beforeinstallprompt', function(e) {
+});
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/trees/service-worker.js', { scope: '/trees/' })
+        // .then(reg => ...)
+        .catch(error => console.log('Registration failed with ' + error));
+}
+    </script>
+    <script type="text/javascript">
+require.config({
+    waitSeconds: 30,
+    baseUrl: 'js'
+});
+require(["main", "d3"], (main, d3) => main.start().then(result => {
+    Object.assign(window, result);
+    d3.selectAll('.startHidden')
+       .classed('startHidden', false);
+}).catch(console.log));
+</script>
+<link rel="stylesheet" href="css/mandelicu.css" type="text/css" charset="utf-8">
+<link rel="stylesheet" href="css/trees.css" type="text/css" charset="utf-8">
+<script type="text/html-tmpl" id="l3pinhtml">
+  <div id="l3pintext">
+    <a href="#" id="l3pinthumba"><img id="l3pinthumb"></a>
+    <div><a href="#" id="l3pincommon"></a></div>
+    <div><span id="l3pinbotanical"></span></div>
+    <button id="l3pinfav">&#x2606;</button>
+    <div id="l3pinwhere"></div>
+    <div id="l3pinsize"></div>
+    <div><a id="l3pinwiki" target="_blank" rel="noopener">Wikipedia...</a></div>
+  </div>
+</script>
+</head>
+  <body>
+    <div id="l3main">
+      <div id="l3maps">
+        <div id="l3maptop" class="l3mapctrl">
+          <span>
+            <label>
+              Tree type:
+              <select id="l3type" size="1">
+                <optgroup id="l3typetop">
+                  <option value="0" selected="selected">All</option>
+                  <option value="-1">&#x2606; Favorites</option>
+                </optgroup>
+                <optgroup id="l3typefavs"></optgroup>
+                <optgroup id="l3typeall"></optgroup>
+              </select>
+            </label>
+            <button id="l3typefav" title="toggle favorite">&#x1f4cc;</button>
+          </span>
+        </div>
+        <div id="l3mapbox">
+          <div id="l3map"></div>
+        </div>
+        <div id="l3mapbot" class="l3mapctrl">
+          <span>
+            <a href="https://data.buffalony.gov" target="_blank" rel="noopener">Buffalo Open Data</a>
+          </span>
+          <span><a href="https://mandelics.com" target="_blank" rel="noopener">mandelics.com</a></span>
+        </div>
+        <button id="l3geolocate" title="Find my location">&#x2299;</button>
+      </div>
+      <div id="l3detail" style="display: none">
+        <div id="l3detailtop">
+          <a href="#" id="l3hidedetail">&#x21e6; Back to Map</a>
+        </div>
+        <div id="l3detailmain">
+          <img id="l3detailthumb" class="l3field" data-entity="species" data-field="wikiThumb" data-target-attr="src">
+          <div id="l3detailspecies">
+            <span class="l3field" data-entity="species" data-field="common_name"></span>
+            (<span class="l3field" data-entity="species" data-field="botanical_name"></span>)
+          </div>
+          <div id="l3detailaddr">
+            <span class="l3field" data-entity="allTrees" data-field="address"></span>
+            <span class="l3field" data-entity="allTrees" data-field="street"></span>
+          </div>
+          <div id="l3detailetc">
+            Side: <span class="l3field" data-entity="allTrees" data-field="side"></span>
+            Site: <span class="l3field" data-entity="allTrees" data-field="site"></span>
+            Park: <span class="l3field" data-entity="allTrees" data-field="park_name"></span>
+          </div>
+          <div class="l3detailmeas">
+            diameter at breast height:
+            <span class="l3field" data-entity="allTrees" data-field="dbh"></span>
+          </div>
+          <div class="l3detailmeas">
+            leaf surface area (ft<sup>2</sup>):
+            <span class="l3field" data-entity="allTrees" data-field="leaf_surface_area_in_sq_ft"></span>
+          </div>
+          <div class="l3detailstatus">
+            Status: <span class="l3field" data-entity="allTrees" data-field="reported_status"></span>
+          </div>
+          <div id="l3detailwikis">
+            <a target="_blank" rel="noopener" id="l3detailwiki">Wikipedia entry</a>:
+            <span class="l3field" data-entity="species" data-field="wikiLink"></span>
+          </div>
+
+          <div class="l3detailnoteshdr">
+            <span>Notes:</span>
+            <button id="l3detailaddnote" title="Post a note...">&#x2795;</button>
+          </div>
+          <div id="l3detailnotes">
+            <!-- template -->
+            <div class="l3detailnote startHidden">
+              <div class="l3dnhdr">
+                <span class="l3dnwhen"></span>
+                <span class="l3dnname"></span>
+                <button class="l3dnaddflag">&#x2690;</button>
+                <button class="l3dnreviewflag">&#x2691;</button>
+                <button class="l3dndelete">&#x2716;</button>
+              </div>
+              <div class="l3dncontent"></div>
+            </div>
+          </div>
+          <hr>
+          <div class="l3detailnoteshdr">
+            <span>General Notes on <span class="l3field" data-entity="species" data-field="common_name"></span>:</span>
+            <button id="l3detailaddgennote" title="Post a note...">&#x2795;</button>
+          </div>
+          <div id="l3detailgennotes">
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Modals: -->
+    <div id="l3revise" class="startHidden" data-title="Revise database">
+      <table>
+        <tr>
+          <td id="l3revfield"></td>
+          <td><input id="l3revval"></td>
+        </tr>
+        <tr>
+          <td>Your name: <i>(required)</i></td>
+          <td><input id="l3revname"></td>
+        </tr>
+      </table>
+    </div>
+    <div id="l3confirm" class="startHidden">
+      <div id="l3confirmmsg">Confirmed?</div>
+    </div>
+    <div id="l3noteedit" class="l3detaildlg startHidden" data-title="Post a Note">
+      <textarea></textarea>
+      <div class="l3inputline">
+        Your Name (required): <input class="l3detaildlgname">
+      </div>
+    </div>
+    <div id="l3notehelp" class="l3detaildlg startHidden" data-title="Help">
+## Formatting
+You can add formatting, links, and pictures using [markdown syntax](https://github.com/showdownjs/showdown/wiki/Showdown's-Markdown-syntax). For example,
+* `# Heading`, `## Subheading`, `### Subsub...`
+* `*italic*` (*italic*)
+* `**bold**` (**bold**)
+* `~~strikethrough~~` (~~strikethrough~~)
+* `* list item`
+* `[link](https://mandelics.com)` ([link](https://mandelics.com))
+* `![image (alt text)](https://mandelics.com/trees/trees-300px.png "with optional title")`:
+![image (alt text)](https://mandelics.com/trees/trees-300px.png "with optional title")
+You can press **`Next`** at any time to see how your post will look with formatting.
+    </div>
+    <div id="l3notereview" class="l3detaildlg startHidden" data-title="Review Before Posting">
+      <div id="l3noterevtext"></div>
+      <div class="l3inputline">
+        Your Name (required): <input class="l3detaildlgname">
+      </div>
+    </div>
+    <div id="l3noteflag" class="l3detaildlg startHidden">
+      <div>
+        Flag this note as inappropriate? Please tell why:
+      </div>
+      <textarea></textarea>
+      <div class="l3inputline">
+        Your Name (required): <input class="l3detaildlgname">
+      </div>
+    </div>
+    <div id="l3noteflagreview" class="l3detaildlg startHidden">
+      <div>
+        This note was flagged because:
+      </div>
+      <div id="l3noteflagwhy"></div>
+      <div>
+        Flagged note contents:
+      </div>
+      <div id="l3noteflagwhat"></div>
+      <div class="l3inputline">
+        Your Name (required): <input class="l3detaildlgname">
+      </div>
+    </div>
+    <div id="intro" class="startHidden">
+      <div id="introShow">
+        <button id="introShowBtn">?</button>
+      </div>
+      <div id="introMain">
+        <div class="introScreen">
+# BfloTrees
+
+This app is for exploring the trees of Buffalo, NY. Thanks to Mayor Byron W. Brown's [OpenData Buffalo](https://data.buffalony.gov/) initiative, we have the latest info including species, size, and location of 75,265 trees.
+
+Select a tree on the map to learn more, and to post your own notes and corrections. Pick a species from the top menu, and press &#x1f4cc; to save it for easy re-selection. Mark your favorite trees by selecting them then pressing &#x2606;.
+
+This app's data is available via an [open api](api.html).
+
+*by Christopher Nicolai*
+[mandelics.com](https://mandelics.com)
+
+![BfloTrees](trees-300px.png "BfloTrees")
+        </div>
+        <button id="introClose">&#x2716;</button>
+        <div id="introControls">
+          <button id="introPrev">&#x2190;</button>
+          <button id="introHide">Hide...</button>
+          <button id="introNext">&#x2192;</button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

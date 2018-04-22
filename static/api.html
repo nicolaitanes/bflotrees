@@ -1,0 +1,70 @@
+<!DOCTYPE html> 
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Trees API - mandelics.com</title>
+    <meta name="viewport" content="initial-scale=1, width=device-width">
+    <link rel="icon" type="image/png" href="trees-300px.png" />
+</head>
+  <body style="overflow-wrap: break-word; padding: 1em;">
+
+    <h3>API for BfloTrees</h3>
+
+    This is the HTTPS API to retrieve data from <a href="https://bflotrees.mandelics.com/trees/">BfloTrees</a>, an app for exploring and annotating the urban canopy of Buffalo, NY.
+    
+    <hr style="margin-top: 1em">
+    
+    <h4>URL</h4>
+    
+    https://bflotrees.mandelics.com/opendata/trees?
+    
+    <h4>Parameters</h4>
+    <ul>
+      <li>t: table name: species, allTrees, or notes; default allTrees</li>
+      <li>q: JSON-encoded <a href="http://docs.sequelizejs.com/manual/tutorial/querying.html">sequelize</a> query object, e.g. {"where": {"latitude": {"$between": [42.88888,42.88889]}}, "order": [["latitude", "DESC"]]}</li>
+    </ul>
+    
+    Parameters should be urlencoded for GET requests, or sent in the body of POST requests.
+
+    <h4>Response</h4>
+    
+    JSON-encoded array of results.
+    
+    <h4>Example</h4>
+    
+    <p><b>GET https://localhost:9001/opendata/trees?q={%22where%22:{%22latitude%22:{%22$between%22:[42.88888,42.88889]}},%22order%22:[[%22longitude%22,%22DESC%22]]}</b></p>
+
+    [{"address":"108","dbh":"0","leaf_surface_area_in_sq_ft":null,"latitude":42.8889,"longitude":-78.8371,"park_name":"0","side":"Front","site":"1","site_id":"3999","street":"LOMBARD ST","id":31819,"reported_status":null,"speciesId":300,"revId":0},{"address":"121","dbh":"0","leaf_surface_area_in_sq_ft":null,"latitude":42.8889,"longitude":-78.838,"park_name":"0","side":"Front","site":"1","site_id":"2825","street":"GIBSON ST","id":31320,"reported_status":null,"speciesId":300,"revId":0},{"address":"211","dbh":"9","leaf_surface_area_in_sq_ft":"105.92","latitude":42.8889,"longitude":-78.842,"park_name":"0","side":"Front","site":"1","site_id":"4001","street":"DETROIT ST","id":32160,"reported_status":null,"speciesId":277,"revId":0},{"address":"441","dbh":"20","leaf_surface_area_in_sq_ft":"46.82","latitude":42.8889,"longitude":-78.8573,"park_name":"0","side":"Side","site":"1","site_id":"16303","street":"BROADWAY ST","id":31585,"reported_status":null,"speciesId":272,"revId":0}]
+
+    <h4>Example</h4>
+
+    <p><b>GET https://bflotrees.mandelics.com/opendata/trees?t=notes&q={%22where%22:{%22allTreeId%22:31585}}</b></p>
+
+    [{"id":5,"allTreeId":31585,"userId":15,"content":"Sample note. Watch out for emoji! 😊","when":"2018-04-21T21:51:48.000Z","flag":"","flagUser":null,"flagWhen":null,"trailheadId":null,"userName":"Christopher Nicolai"}]
+    
+    <hr style="margin-top: 1em">
+    
+    <h4>URL</h4>
+
+    https://bflotrees.mandelics.com/opendata/tree?
+    
+    <h4>Parameters</h4>
+    <ul>
+      <li>t: table name: species, allTrees, or notes; default allTrees</li>
+      <li>q: JSON-encoded <a href="http://docs.sequelizejs.com/manual/tutorial/querying.html">sequelize</a> query object, e.g. {"where": {"id": 300}}</li>
+    </ul>
+    
+    Parameters should be urlencoded for GET requests, or sent in the body of POST requests.
+
+    <h4>Response</h4>
+    
+    JSON-encoded result object.
+    
+    <h4>Example</h4>
+    
+    <p><b>GET https://localhost:9001/opendata/species?t=species&amp;q={%22where%22:{%22id%22:300}}</b></p>
+
+    [{"botanical_name":"VACANT","common_name":"VACANT","wikiLink":"https://en.wikipedia.org/wiki/Vacant_niche","wikiThumb":null,"alive":false,"edible":null,"id":300,"revId":0}]
+
+  </body>
+</html>

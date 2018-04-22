@@ -1,0 +1,111 @@
+.modal {
+    position: fixed;
+    z-index: 1;
+    transition: top .5s;
+    top: -150%;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    max-width: 100vw;
+    max-height: 100vh;
+    display: flex;
+    display: -webkit-flex;
+    display: -ms-flex;
+    flex-flow: column nowrap;
+    -webkit-flex-flow: column nowrap;
+    -ms-flex-flow: column nowrap;
+    justify-content: center;
+    align-items: center;
+}
+.modal_shield {
+    display: inline-block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    opacity: .5;
+}
+.modal_body {
+    flex: 0 1 auto;
+    -webkit-flex: 0 1 auto;
+    -ms-flex: 0 1 auto;
+    border: .2em solid #666;
+    margin: 1em;
+    background: #fff;
+    color: #000;
+    opacity: .95;
+    display: flex;
+    display: -webkit-flex;
+    display: -ms-flex;
+    flex-flow: column nowrap;
+    -webkit-flex-flow: column nowrap;
+    -ms-flex-flow: column nowrap;
+    align-items: stretch;
+}
+.modal_title {
+    flex: 0 0 auto;
+    -webkit-flex: 0 0 auto;
+    -ms-flex: 0 0 auto;
+    padding: .25em;
+    padding-left: 2em;
+    border: .2em solid #666;
+    background: #000;
+    color: #fff;
+    font-weight: 900;
+}
+.modal_content {
+    flex: 0 1 auto;
+    -webkit-flex: 0 1 auto;
+    -ms-flex: 0 1 auto;
+    padding: .5em;
+    position: relative;
+    display: flex;
+    display: -webkit-flex;
+    display: -ms-flex;
+    flex-flow: column nowrap;
+    -webkit-flex-flow: column nowrap;
+    -ms-flex-flow: column nowrap;
+    align-items: stretch;
+}
+.modal_buttons {
+    flex: 0 0 auto;
+    -webkit-flex: 0 0 auto;
+    -ms-flex: 0 0 auto;
+    padding-bottom: 1.5em;
+    padding-right: 1em;
+    text-align: right;
+    display: flex;
+    display: -webkit-flex;
+    display: -ms-flex;
+    flex-flow: row wrap;
+    -webkit-flex-flow: row wrap;
+    -ms-flex-flow: row wrap;
+    justify-content: flex-end;
+    justify-content: -webkit-flex-end;
+    justify-content: -ms-flex-end;
+}
+.modal_buttons button {
+    font-size: 100%;
+    font-weight: 800;
+}
+.modal_btn {
+    margin-right: 1em;
+}
+.modal_content a, .modal_content a:hover, .modal_content a:visited {
+    color: #911;
+}
+
+.noselect {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: rgba(0,0,0,0)
+}
+
+.startHidden {
+    display: none;
+}
