@@ -1,6 +1,6 @@
 "use strict";
 
-define("server", ["fs", "express", "express-ws", "http", "spdy", "compression", "morgan", "treeserv"], (fs, express, expressWS, http, spdy, compression, morgan, treeserv) => {
+define("server", ["fs", "express", "express-ws", "http", "compression", "morgan", "treeserv"], (fs, express, expressWS, http, compression, morgan, treeserv) => {
     let exports = {};
     
     let HTTP_PORT = 9090;
