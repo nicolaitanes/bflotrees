@@ -439,18 +439,20 @@ define("treedb", ["lodash", "node-fetch", 'node-uuid', "sequelize"], (_, fetch, 
     
     db.annotate = {
         notes: async note => {
-            note.userName = (await privdb.user.findOne({where: {id: note.userId}})).name;
+            const user = await privdb.user.findOne({where: {id: note.userId}})
+            note.userName = user && user.name || '';
             return note;
         },
         speciesNotes: async note => {
-            note.userName = (await privdb.user.findOne({where: {id: note.userId}})).name;
+            const user = await privdb.user.findOne({where: {id: note.userId}})
+            note.userName = user && user.name || '';
             return note;
         }
     };
 
     const pickRelevant = exports.pickRelevant = dbName => async r => {
         let out = _.pick(r, db.relevant[dbName]);
-        if ( db.annotate[dbName] ) {
+        if ( out && db.annotate[dbName] ) {
             out = await db.annotate[dbName](out);
         }
         return out;

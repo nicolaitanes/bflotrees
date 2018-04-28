@@ -173,6 +173,23 @@ define("main", ["domReady!", "mandelicu", "d3", "showdown"], (doc, mandelicu, d3
                 where: {speciesId},
                 order: [ order || ['when', 'ASC'] ]
             });
+        },
+        async upload(blob, name) {
+            const {id, url} = await this.ws.request({
+                t: 'upload',
+                name
+            });
+            const body = new FormData();
+            body.append('file', blob);
+            fetch('/up/'+id, {
+                method: 'POST',
+                body
+            });
+            await this.ws.request({
+                t: 'uploadDone',
+                id
+            });
+            return url;
         }
     };
 
@@ -324,6 +341,10 @@ define("main", ["domReady!", "mandelicu", "d3", "showdown"], (doc, mandelicu, d3
                 notesDlg.Review.resolve(false); // not ready
             }] ]
         }),
+        ReviewPic: new mandelicu.Modal({
+            content: document.getElementById('l3picreview'),
+            okLabel: 'Post'
+        }),
         Flag: new mandelicu.Modal({
             content: document.getElementById('l3noteflag'),
             okLabel: 'Flag It!',
@@ -335,6 +356,8 @@ define("main", ["domReady!", "mandelicu", "d3", "showdown"], (doc, mandelicu, d3
         }),
         viewTemplate: mandelicu.querydotdot('.l3detailnote').toFragment()
     };
+
+    const opener = new mandelicu.Opener();
 
     class Notes {
         constructor({selector='#l3detailnotes', general=false}={}) {
@@ -349,6 +372,10 @@ define("main", ["domReady!", "mandelicu", "d3", "showdown"], (doc, mandelicu, d3
             const reviewNodes = mandelicu.querydotdot(notesDlg.Review.dom.content);
             this.reviewText = reviewNodes('#l3noterevtext');
             this.reviewName = reviewNodes('.l3detaildlgname');
+            const revPicNodes = mandelicu.querydotdot(notesDlg.ReviewPic.dom.content);
+            this.revPicImg = revPicNodes('#l3picrevpic');
+            this.revPicCanvas = revPicNodes('#l3picrevcanvas');
+            this.revPicName = revPicNodes('.l3detaildlgname');
             const flagNodes = mandelicu.querydotdot(notesDlg.Flag.dom.content);
             this.flagText = flagNodes('textarea');
             this.flagName = flagNodes('.l3detaildlgname');
@@ -465,6 +492,34 @@ define("main", ["domReady!", "mandelicu", "d3", "showdown"], (doc, mandelicu, d3
             return ready ? (this.general ? api.postSpeciesNote(id, content) :  api.postNote(id, content))
                 : this.post(id, content);
         }
+        async _reviewPic(id, file) {
+            const blobURL = URL.createObjectURL(file);
+            try {
+                this.revPicImg.src = blobURL;
+                setTimeout(() => {
+                    const scale = Math.min(1, 1024/this.revPicImg.naturalWidth);
+                    this.revPicCanvas.width = Math.round(scale * this.revPicImg.naturalWidth)|0;
+                    this.revPicCanvas.height = Math.round(scale*this.revPicImg.naturalHeight)|0;
+                    const ctx = this.revPicCanvas.getContext('2d');
+                    ctx.drawImage(this.revPicImg, 0, 0, this.revPicCanvas.width, this.revPicCanvas.height);
+                }, 100);
+                this.revPicName.value = state.name();
+                await notesDlg.ReviewPic.run();
+                state.name(this.revPicName.value);
+                const blob = await mandelicu.canvasToBlob(this.revPicCanvas, 'image/jpeg');
+                const url = await api.upload(blob, 'image.jpg');
+                const content = `![image (image)](${url})`;
+                return this.general ? api.postSpeciesNote(id, content) : api.postNote(id, content);
+            } finally {
+                this.revPicImg.src = '';
+                URL.revokeObjectURL(blobURL);
+                opener.reset();
+            }
+        }
+        async snap(id) {
+            const [file] = await opener.choose('image/*');
+            return this._reviewPic(id, file);
+        }
         async flag(id, sameContent) {
             if ( ! sameContent ) {
                 this.flagText.value = '';
@@ -562,6 +617,8 @@ define("main", ["domReady!", "mandelicu", "d3", "showdown"], (doc, mandelicu, d3
             api.listSpeciesNotes(s.id).then(results => genNotes.render(results));
             this.panel.select('#l3detailaddnote').on('click', () => notes.post(t.id).then(note => notes.render(notes.data.concat([note]))));
             this.panel.select('#l3detailaddgennote').on('click', () => genNotes.post(s.id).then(note => genNotes.render(genNotes.data.concat([note]))));
+            this.panel.select('#l3detailaddpic').on('click', () => notes.snap(t.id).then(note => notes.render(notes.data.concat([note]))));
+            this.panel.select('#l3detailaddgenpic').on('click', () => genNotes.snap(s.id).then(note => genNotes.render(genNotes.data.concat([note]))));
             this.hidePanel.style('opacity', 0.01);
             setTimeout(() => {
                 this.hidePanel.style('display', 'none');
@@ -871,7 +928,7 @@ define("main", ["domReady!", "mandelicu", "d3", "showdown"], (doc, mandelicu, d3
 // finish missing wiki links and thumbs
 // trail: trees of mark twain's acquaintance (*who knows?)
 
-// github
+// write about edible harvesting and knowledge sharing
 
 // retest notes and flagging, for tree and species
 

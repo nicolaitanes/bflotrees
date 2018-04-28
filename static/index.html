@@ -113,7 +113,9 @@ require(["main", "d3"], (main, d3) => main.start().then(result => {
 
           <div class="l3detailnoteshdr">
             <span>Notes:</span>
-            <button id="l3detailaddnote" title="Post a note...">&#x2795;</button>
+            <span>
+              <button class="l3detaildonote" id="l3detailaddpic" title="Post a picture...">&#x1f4f7;</button>
+              <button class="l3detaildonote" id="l3detailaddnote" title="Post a note...">&#x2795;</button>
           </div>
           <div id="l3detailnotes">
             <!-- template -->
@@ -131,7 +133,10 @@ require(["main", "d3"], (main, d3) => main.start().then(result => {
           <hr>
           <div class="l3detailnoteshdr">
             <span>General Notes on <span class="l3field" data-entity="species" data-field="common_name"></span>:</span>
-            <button id="l3detailaddgennote" title="Post a note...">&#x2795;</button>
+            <span>
+              <button class="l3detaildonote" id="l3detailaddgenpic" title="Post a picture...">&#x1f4f7;</button>
+              <button class="l3detaildonote" id="l3detailaddgennote" title="Post a note...">&#x2795;</button>
+            </span>
           </div>
           <div id="l3detailgennotes">
           </div>
@@ -179,6 +184,15 @@ You can press **`Next`** at any time to see how your post will look with formatt
         Your Name (required): <input class="l3detaildlgname">
       </div>
     </div>
+    <div id="l3picreview" class="l3detaildlg startHidden" data-title="Review Before Posting">
+      <div id="l3picrevframe">
+        <img id="l3picrevpic">
+        <canvas id="l3picrevcanvas">
+      </div>
+      <div class="l3inputline">
+        Your Name (required): <input class="l3detaildlgname">
+      </div>
+    </div>
     <div id="l3noteflag" class="l3detaildlg startHidden">
       <div>
         Flag this note as inappropriate? Please tell why:
@@ -213,8 +227,7 @@ This app is for exploring the trees of Buffalo, NY. Thanks to Mayor Byron W. Bro
 
 Select a tree on the map to learn more, and to post your own notes and corrections. Pick a species from the top menu, and press &#x1f4cc; to save it for easy re-selection. Mark your favorite trees by selecting them then pressing &#x2606;.
 
-This app's data is available via an [open api](api.html). Source code is available
-[on github](https://github.com/nicolaitanes/bflotrees).
+This app's data is available via an [open api](api.html). Source code is available [on github](https://github.com/nicolaitanes/bflotrees).
 
 *by Christopher Nicolai*
 [mandelics.com](https://mandelics.com)

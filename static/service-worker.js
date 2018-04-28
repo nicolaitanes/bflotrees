@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_VERSION = "v9";
+const CACHE_VERSION = "v2";
 const CACHE_PREFIX = 'trees_';
 const staticPaths = [ // make the first one small
     '/trees/trees-300px.png'

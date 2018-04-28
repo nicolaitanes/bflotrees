@@ -637,5 +637,97 @@ define("mandelicu", ["d3"], (d3) => {
             .property('selectedIndex', 0);
     };
 
+    exports.Opener = class Opener {
+        constructor(config) {
+            this.config = config || {}; // {noComplaints: false, onprogress: function(x in 0..1)}
+            this.res = null;
+            this.rej = null;
+            this.dlg = new exports.Modal({
+                title: "Choose a file"
+            });
+            const root = d3.select(this.dlg.dom.content);
+            root.append('div').text('Please enter the URL of a file:');
+            this.txtURL = root.append('div').append('input').node();
+            this.txtURL.style.width = '100%';
+            const line = root.append('div');
+            line.append('span').text('or, choose a file from your device: ');
+            this.input = line.append('input').node();
+            this.input.type = 'file';
+            if ( 'multiple' in this.config ) {
+                this.input.multiple = !!this.config.multiple;
+            }
+            this.input.addEventListener("change", this._onChange.bind(this));
+        }
+        accept(acceptType) {
+                this.input.setAttribute("accept", acceptType || this.config.acceptType || "*/*");
+        }
+        choose(acceptType) {
+            return new Promise((resolve, reject) => {
+                this.res = resolve;
+                this.rej = reject;
+                this.accept(acceptType);
+                this.input.click();
+            });
+        }
+        run(acceptType) {
+            return new Promise((resolve, reject) => {
+                this.res = resolve;
+                this.rej = reject;
+                this.accept(acceptType);
+                //setTimeout(function() {
+                //    this.txtURL.focus();
+                //}.bind(this), 10);
+                this.dlg.run().then(() => {
+                    const res = this.res;
+                    const rej = this.rej;
+                    if ( res ) {
+                        this.res = null;
+                        this.rej = null;
+                        let url = this.txtURL.value;
+                        if ( url ) {
+                            if ( url.indexOf('://') < 0 ) {
+                                url = 'https://'+url;
+                            }
+                            res(fetch(url)
+                                .then(response => response.blob())
+                                .then(blob => {
+                                    blob.name = url;
+                                    return [blob];
+                                }).catch(err => {
+                                    let complaint = err.message || '';
+                                    if ( complaint.indexOf('Network Error') >= 0 ) {
+                                        complaint = 'The file could not be read.  If the URL is not in error, perhaps the host is not configured to allow cross-origin requests.';
+                                    }
+                                    this.config.noComplaints || setTimeout(() => {
+                                        alert(complaint);
+                                    }, 10);
+                                    return Promise.reject(err);
+                                }));
+                        } else {
+                            rej('Canceled');
+                        }
+                    }
+                });
+            });
+        }
+        reset() {
+            this.input.value = "";
+            this.txtURL.value = "";
+        }
+        _onChange() {
+            const res = this.res;
+            if ( res ) {
+                this.res = null;
+                this.rej = null;
+                this.dlg.close();
+                res(this.input.files);
+            }
+        }
+    };
+
+    exports.canvasToBlob = function canvasToBlob(canvas, mimeType, quality) {
+        return new Promise((resolve, reject) => canvas.toBlob(resolve, mimeType, quality));
+    };
+
     return exports;
 });

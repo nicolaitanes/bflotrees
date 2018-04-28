@@ -1,7 +1,11 @@
-define("treeserv", ["express", "body-parser", "mandu", "treedb"], (express, bodyParser, mandu, treedb) => {
+define("treeserv", ["express", "body-parser", "mandu", "treedb", "upfile", "fs", "path"], (express, bodyParser, mandu, treedb, upfile, fs, path) => {
     const router = new express.Router();
     router.use(bodyParser.json());
     router.use(bodyParser.urlencoded({ extended: true }));
+
+    const IMAGE_PATH = process.env.IMAGE_PATH || '/var/treepic/';
+    const IMAGE_URL = process.env.IMAGE_URL || '/pic/';
+    const upload = new upfile.UploadFolder({path: IMAGE_PATH, urlPath: IMAGE_URL});
 
     router.get('/trees', async (req, res) => {
         try {
@@ -37,6 +41,14 @@ define("treeserv", ["express", "body-parser", "mandu", "treedb"], (express, body
     });
 
     // https://localhost:9001/opendata/trees?&q={%22where%22:{%22property_benefits%22:%220%22,%22dbh%22:{%22$not%22:%220%22}}}
+
+    const picContent = new RegExp(`^!\\[image \\(image\\)\\]\\(${IMAGE_URL}([a-f0-9-]+\.jpg)\\)$`);
+    function deleteIfPic({content} = {}) {
+        const pic = content && content.match(picContent);
+        if ( pic ) {
+            fs.rename(path.join(IMAGE_PATH, pic[1]), path.join(IMAGE_PATH, 'deleted', pic[1]), err => err && console.log(err));
+        }
+    }
 
     router.setupWS = function setupWS() {
         router.ws("/ws", (ws, req) => {
@@ -100,12 +112,23 @@ define("treeserv", ["express", "body-parser", "mandu", "treedb"], (express, body
                     .then(result => ({result})),
                 reviseSpecies: ({id, fieldName, value}) => session && session.reviseSpecies({id, fieldName, value}),
                 reviseTree: ({id, fieldName, value}) => session && session.reviseTree({id, fieldName, value}),
-                postNote: (({allTreesId, content, when}) => session && session.postNote({allTreesId, content, when})),
-                flagNote: (({id, flag, when}) => session && session.flagNote({id, flag, when})),
-                deleteNote: (({id}) => session && session.deleteNote({id})),
-                postSpeciesNote: (({speciesId, content, when}) => session && session.postSpeciesNote({speciesId, content, when})),
-                flagSpeciesNote: (({id, flag, when}) => session && session.flagSpeciesNote({id, flag, when})),
-                deleteSpeciesNote: (({id}) => session && session.deleteSpeciesNote({id}))
+                postNote: ({allTreesId, content, when}) => session && session.postNote({allTreesId, content, when}),
+                flagNote: ({id, flag, when}) => session && session.flagNote({id, flag, when}),
+                deleteNote: async ({id}) => {
+                    const {result: note} = await treedb.findOne('notes', {where: {id}});
+                    deleteIfPic(note);
+                    return session && session.deleteNote({id});
+                },
+                postSpeciesNote: ({speciesId, content, when}) => session && session.postSpeciesNote({speciesId, content, when}),
+                flagSpeciesNote: ({id, flag, when}) => session && session.flagSpeciesNote({id, flag, when}),
+                deleteSpeciesNote: async ({id}) => {
+                    const {result: note} = await treedb.findOne('speciesNotes', {where: {id}});
+                    deleteIfPic(note);
+                    return session && session.deleteSpeciesNote({id});
+                },
+                upload: ({name}) => upload.prepare({name}),
+                uploadDone: ({id}) => upload.receive(id)
+                    
                 
                 // admin privdb find and edit
                 // admin add user

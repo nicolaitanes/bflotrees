@@ -209,11 +209,16 @@ a:hover {
     justify-content: space-between;
     font-size: 140%;
 }
-#l3detailaddnote, #l3detailaddgennote {
+.l3detaildonote {
     border-radius: 50%;
-    background: #090;
     color: #fff;
     font-size: 120%;
+}
+#l3detailaddpic, #l3detailaddgenpic {
+    background: #009;
+}
+#l3detailaddnote, #l3detailaddgennote {
+    background: #090;
     font-weight: bold;
 }
 
@@ -252,6 +257,10 @@ a:hover {
 .l3dncontent {
     padding: 0.5em;
 }
+.l3dncontent img {
+    max-width: 100%;
+    max-height: 100%;
+}
 
 #l3noterevtext {
     flex: 1 1 auto;
@@ -273,6 +282,25 @@ a:hover {
     background: #fcc;
 }
 
+#l3picrevframe {
+    flex: 1 1 auto;
+    position: relative;
+}
+#l3picrevpic {
+position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: auto;
+  height: auto;
+  max-width: 90%;
+  max-height: 90%;
+}
+#l3picrevcanvas {
+    position: fixed;
+    top: 1000%;
+    left: 1000%;
+}
 
 #intro {
     z-index: 10000;
