@@ -373,9 +373,10 @@ define("main", ["domReady!", "mandelicu", "d3", "showdown"], (doc, mandelicu, d3
             this.reviewText = reviewNodes('#l3noterevtext');
             this.reviewName = reviewNodes('.l3detaildlgname');
             const revPicNodes = mandelicu.querydotdot(notesDlg.ReviewPic.dom.content);
-            this.revPicImg = revPicNodes('#l3picrevpic');
-            this.revPicCanvas = revPicNodes('#l3picrevcanvas');
+            this.revPicImg = revPicNodes('#l3picrevpic', node => new mandelicu.LaunderedImgCanvas({node, maxWidth: 1024}));
             this.revPicName = revPicNodes('.l3detaildlgname');
+            this.revPicRotCCW = revPicNodes.listen('#l3picrevccw', 'click', () => {this.revPicImg.rotation = (this.revPicImg.rotation + 1)%4;});
+            this.revPicRotCW = revPicNodes.listen('#l3picrevcw', 'click', () => {this.revPicImg.rotation = (this.revPicImg.rotation - 1)%4;});
             const flagNodes = mandelicu.querydotdot(notesDlg.Flag.dom.content);
             this.flagText = flagNodes('textarea');
             this.flagName = flagNodes('.l3detaildlgname');
@@ -493,26 +494,17 @@ define("main", ["domReady!", "mandelicu", "d3", "showdown"], (doc, mandelicu, d3
                 : this.post(id, content);
         }
         async _reviewPic(id, file) {
-            const blobURL = URL.createObjectURL(file);
+            this.revPicImg.src = file;
             try {
-                this.revPicImg.src = blobURL;
-                setTimeout(() => {
-                    const scale = Math.min(1, 1024/this.revPicImg.naturalWidth);
-                    this.revPicCanvas.width = Math.round(scale * this.revPicImg.naturalWidth)|0;
-                    this.revPicCanvas.height = Math.round(scale*this.revPicImg.naturalHeight)|0;
-                    const ctx = this.revPicCanvas.getContext('2d');
-                    ctx.drawImage(this.revPicImg, 0, 0, this.revPicCanvas.width, this.revPicCanvas.height);
-                }, 100);
                 this.revPicName.value = state.name();
                 await notesDlg.ReviewPic.run();
                 state.name(this.revPicName.value);
-                const blob = await mandelicu.canvasToBlob(this.revPicCanvas, 'image/jpeg');
+                const blob = await this.revPicImg.toBlob('image/jpeg');
                 const url = await api.upload(blob, 'image.jpg');
                 const content = `![image (image)](${url})`;
                 return this.general ? api.postSpeciesNote(id, content) : api.postNote(id, content);
             } finally {
                 this.revPicImg.src = '';
-                URL.revokeObjectURL(blobURL);
                 opener.reset();
             }
         }

@@ -260,6 +260,7 @@ a:hover {
 .l3dncontent img {
     max-width: 100%;
     max-height: 100%;
+    image-orientation: from-image;
 }
 
 #l3noterevtext {
@@ -284,22 +285,34 @@ a:hover {
 
 #l3picrevframe {
     flex: 1 1 auto;
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+    justify-content: center;
     position: relative;
 }
 #l3picrevpic {
-position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: auto;
-  height: auto;
-  max-width: 90%;
-  max-height: 90%;
+    flex: 0 0 auto;
 }
-#l3picrevcanvas {
-    position: fixed;
-    top: 1000%;
-    left: 1000%;
+#l3picrevccw {
+    opacity: 0.8;
+    border-radius: 50%;
+    background: #900;
+    color: #fff;
+    font-size: 120%;
+    position: absolute;
+    top: .25em;
+    left: .25em;
+}
+#l3picrevcw {
+    opacity: 0.9;
+    border-radius: 50%;
+    background: #900;
+    color: #fff;
+    font-size: 120%;
+    position: absolute;
+    top: .25em;
+    right: .25em;
 }
 
 #intro {

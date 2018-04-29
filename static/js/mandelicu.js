@@ -1,4 +1,4 @@
-define("mandelicu", ["d3"], (d3) => {
+define("mandelicu", ["d3", "element-resize-detector"], (d3, elementResize) => {
     'use strict';
 
     const exports = {};
@@ -725,9 +725,106 @@ define("mandelicu", ["d3"], (d3) => {
         }
     };
 
-    exports.canvasToBlob = function canvasToBlob(canvas, mimeType, quality) {
-        return new Promise((resolve, reject) => canvas.toBlob(resolve, mimeType, quality));
+    const TAU = 2*Math.PI; // savages!
+    
+    exports.LaunderedImgCanvas = class LaunderedImgCanvas {
+        constructor({node, maxWidth, onrender}) {
+            this.node = node || document.createElement('canvas');
+            this.node.classList.add('launderedImgCanvas');
+            this.maxWidth = maxWidth;
+            this.onrender = onrender;
+            this._rot = 0;
+            this.blob = null;
+            this.blobURL = null;
+            this.img = new Image();
+            this.img.addEventListener('load', ev => this.render());
+            exports.onResize(this.node.parentNode, ev => this.render());
+        }
+        destroy() {
+            exports.offResize(this.node);
+        }
+        get src() {
+            return this.blob || this.img.src;
+        }
+        set src(src) {
+            if ( this.blobURL ) {
+                this.img.src = '';
+                URL.revokeObjectURL(this.blobURL);
+                this.blobURL = this.blob = null;
+            }
+            if ( src.size ) {
+                this.blob = src;
+                this.blobURL = URL.createObjectURL(src);
+                this.img.src = this.blobURL;
+            } else {
+                this.img.src = src;
+            }
+        }
+        get rotation() {
+            return this._rot;
+        }
+        set rotation(rot) {
+            this._rot = rot;
+            this.render();
+        }
+        toBlob(mimeType, quality) {
+            return new Promise((resolve, reject) => this.node.toBlob(resolve, mimeType, quality));
+        }
+        render() {
+            const w = this.img.naturalWidth;
+            const h = this.img.naturalHeight;
+            if ( ! (w && h) ) {
+                const ctx = this.node.getContext('2d');
+                ctx.fillStyle = '#999';
+                ctx.rect(0, 0, this.node.width, this.node.height);
+                ctx.fill();
+                return;
+            }
+            let [rw, rh] = [w, h];
+            if ( this.rotation % 2 ) {
+                [rw, rh] = [rh, rw];
+            }
+            const pw = this.node.parentNode.clientWidth;
+            const ph = this.node.parentNode.clientHeight;
+            let canvasScale = Math.max(rw/pw, rh/ph);
+            if ( this.maxWidth ) {
+                canvasScale = Math.min(this.maxWidth ? this.maxWidth/pw : 1,
+                                       this.maxWidth ? this.maxWidth/ph : 1,
+                                       canvasScale);
+            }
+            const cwFull = Math.round(canvasScale * pw)|0;
+            const chFull = Math.round(canvasScale * ph)|0;
+            const scale = Math.min(1, cwFull/rw, chFull/rh);
+            const [ow, oh] = [(scale*rw)|0, (scale*rh)|0];
+            const [cw, ch] = [(ow/canvasScale)|0, (oh/canvasScale)|0];
+            this.node.width = ow;
+            this.node.height = oh;
+            this.node.style.width = `${cw}px`;
+            this.node.style.height = `${ch}px`;
+            //console.log({w, h, cwFull, chFull, cw, ch, rw, rh, pw, ph, ow, oh, canvasScale, scale, maxWidth: this.maxWidth});
+            setTimeout(() => {
+                const ctx = this.node.getContext('2d');
+                ctx.save();
+                try {
+                    ctx.translate(ow>>1, oh>>1);
+                    ctx.scale(scale, scale);
+                    ctx.rotate(-(this._rot/4)*TAU);
+                    ctx.translate(-(w>>1), -(h>>1));
+                    ctx.drawImage(this.img, 0, 0);
+                    this.onrender && this.onrender();
+                } finally {
+                    ctx.restore();
+                }
+            }, 10);
+        }
     };
+
+    let resizeChecker;
+    exports.onResize = (node, onresize) => {
+        resizeChecker = resizeChecker || elementResize({strategy: "scroll"});
+        resizeChecker.listenTo(node, onresize);
+    };
+    exports.offResize = node => resizeChecker.uninstall(node);
 
     return exports;
 });
