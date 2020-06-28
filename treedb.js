@@ -431,7 +431,7 @@ define("treedb", ["lodash", "node-fetch", 'node-uuid', "sequelize"], (_, fetch, 
     db.speciesNotes.belongsTo(db.species);
     db.species.hasMany(db.speciesNotes);
     db.allTrees.belongsToMany(privdb.user, {through: privdb.favTree});
-    privdb.user.belongsToMany(db.allTrees, {through: privdb.favTree})
+    privdb.user.belongsToMany(db.allTrees, {through: privdb.favTree});
     db.species.belongsToMany(privdb.user, {through: privdb.favSpecies});
     privdb.user.belongsToMany(db.species, {through: privdb.favSpecies});
     privdb.user.hasMany(privdb.screen);
@@ -439,12 +439,12 @@ define("treedb", ["lodash", "node-fetch", 'node-uuid', "sequelize"], (_, fetch, 
     
     db.annotate = {
         notes: async note => {
-            const user = await privdb.user.findOne({where: {id: note.userId}})
+            const user = await privdb.user.findOne({where: {id: note.userId}});
             note.userName = user && user.name || '';
             return note;
         },
         speciesNotes: async note => {
-            const user = await privdb.user.findOne({where: {id: note.userId}})
+            const user = await privdb.user.findOne({where: {id: note.userId}});
             note.userName = user && user.name || '';
             return note;
         }
@@ -569,7 +569,7 @@ define("treedb", ["lodash", "node-fetch", 'node-uuid', "sequelize"], (_, fetch, 
             let response = await wikiSearch(`${s.common_name} (${s.botanical_name})`);
             response = response || await wikiSearch(s.botanical_name);
             response = response || await wikiSearch(s.common_name);
-            if ( response ) {
+            if ( response ) { /// try?
                 const title = response.title.replace(' ', '_');
                 const wikiThumb = await wikiThumbURL(title);
                 s.update({

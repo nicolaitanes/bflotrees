@@ -61,7 +61,7 @@ define("mandelicu", ["d3", "element-resize-detector"], (d3, elementResize) => {
             this.ev = exports.makeEvents(['changed', 'applied'].concat(names));
             this.evAnyway = exports.makeEvents(['changed', 'applied'].concat(names));
             for (const name of names) {
-                if ( typeof(this.state[name].v) !== 'undefined' ) {
+                if ( this.state[name] && typeof(this.state[name].v) !== 'undefined' ) {
                     this.state[name] = this.state[name].v;
                 }
                 const toType = {
@@ -728,11 +728,15 @@ define("mandelicu", ["d3", "element-resize-detector"], (d3, elementResize) => {
     const TAU = 2*Math.PI; // savages!
     
     exports.LaunderedImgCanvas = class LaunderedImgCanvas {
-        constructor({node, maxWidth, onrender}) {
+        // attempts to fit inside parent clientWidth
+        // accepts src = url or blob
+        // optional maxWidth will downsample image if either naturalWidth or naturalHeight is greater
+        // rotation: integer, number of clockwise quarter-turns (TAU/4)
+        constructor({node, maxWidth, onload}) {
             this.node = node || document.createElement('canvas');
             this.node.classList.add('launderedImgCanvas');
             this.maxWidth = maxWidth;
-            this.onrender = onrender;
+            this.onload = onload;
             this._rot = 0;
             this.blob = null;
             this.blobURL = null;
@@ -742,16 +746,20 @@ define("mandelicu", ["d3", "element-resize-detector"], (d3, elementResize) => {
         }
         destroy() {
             exports.offResize(this.node);
+            this._unblob();
         }
-        get src() {
-            return this.blob || this.img.src;
-        }
-        set src(src) {
+        _unblob() {
             if ( this.blobURL ) {
                 this.img.src = '';
                 URL.revokeObjectURL(this.blobURL);
                 this.blobURL = this.blob = null;
             }
+        }
+        get src() {
+            return this.blob || this.img.src;
+        }
+        set src(src) {
+            this._unblob();
             if ( src.size ) {
                 this.blob = src;
                 this.blobURL = URL.createObjectURL(src);
@@ -771,51 +779,42 @@ define("mandelicu", ["d3", "element-resize-detector"], (d3, elementResize) => {
             return new Promise((resolve, reject) => this.node.toBlob(resolve, mimeType, quality));
         }
         render() {
-            const w = this.img.naturalWidth;
-            const h = this.img.naturalHeight;
+            const [w, h] = [this.img.naturalWidth, this.img.naturalHeight];
             if ( ! (w && h) ) {
                 const ctx = this.node.getContext('2d');
-                ctx.fillStyle = '#999';
-                ctx.rect(0, 0, this.node.width, this.node.height);
-                ctx.fill();
+                ctx.clearRect(0, 0, this.node.width, this.node.height);
                 return;
             }
-            let [rw, rh] = [w, h];
-            if ( this.rotation % 2 ) {
-                [rw, rh] = [rh, rw];
-            }
-            const pw = this.node.parentNode.clientWidth;
-            const ph = this.node.parentNode.clientHeight;
+            let [rw, rh] = (this.rotation % 2) ? [h, w] : [w, h];
+            const parent = this.node.parentNode;
+            const [pw, ph] = [parent.clientWidth, parent.clientHeight];
             let canvasScale = Math.max(rw/pw, rh/ph);
             if ( this.maxWidth ) {
-                canvasScale = Math.min(this.maxWidth ? this.maxWidth/pw : 1,
-                                       this.maxWidth ? this.maxWidth/ph : 1,
-                                       canvasScale);
+                canvasScale = Math.min(this.maxWidth/pw, this.maxWidth/ph, canvasScale);
             }
-            const cwFull = Math.round(canvasScale * pw)|0;
-            const chFull = Math.round(canvasScale * ph)|0;
+            const [cwFull, chFull] = [pw, ph].map(p => Math.round(canvasScale * p)|0);
             const scale = Math.min(1, cwFull/rw, chFull/rh);
-            const [ow, oh] = [(scale*rw)|0, (scale*rh)|0];
-            const [cw, ch] = [(ow/canvasScale)|0, (oh/canvasScale)|0];
+            const [ow, oh] = [rw, rh].map(r => (scale*r)|0);
+            const [cw, ch] = [ow, oh].map(o => (o/canvasScale)|0);
             this.node.width = ow;
             this.node.height = oh;
             this.node.style.width = `${cw}px`;
             this.node.style.height = `${ch}px`;
-            //console.log({w, h, cwFull, chFull, cw, ch, rw, rh, pw, ph, ow, oh, canvasScale, scale, maxWidth: this.maxWidth});
-            setTimeout(() => {
-                const ctx = this.node.getContext('2d');
-                ctx.save();
-                try {
-                    ctx.translate(ow>>1, oh>>1);
-                    ctx.scale(scale, scale);
-                    ctx.rotate(-(this._rot/4)*TAU);
-                    ctx.translate(-(w>>1), -(h>>1));
-                    ctx.drawImage(this.img, 0, 0);
-                    this.onrender && this.onrender();
-                } finally {
-                    ctx.restore();
-                }
-            }, 10);
+            setTimeout(() => this._render2({ow, oh, scale, w, h}), 10);
+        }
+        _render2({ow, oh, scale, w, h}) {
+            const ctx = this.node.getContext('2d');
+            ctx.save();
+            try {
+                ctx.translate(ow>>1, oh>>1);
+                ctx.scale(scale, scale);
+                ctx.rotate(-(this._rot/4)*TAU);
+                ctx.translate(-(w>>1), -(h>>1));
+                ctx.drawImage(this.img, 0, 0);
+                this.onload && this.onload();
+            } finally {
+                ctx.restore();
+            }
         }
     };
 
@@ -826,5 +825,50 @@ define("mandelicu", ["d3", "element-resize-detector"], (d3, elementResize) => {
     };
     exports.offResize = node => resizeChecker.uninstall(node);
 
+    let installEvent;
+    const installable = new exports.Event();
+    exports.prepForInstallButton = function prepForInstallButton() {
+        if ( installEvent === undefined ) {
+            installEvent = null;
+            window.addEventListener('beforeinstallprompt', e => {
+                e.preventDefault();
+                installEvent = e;
+                installable.trigger(true);
+            });
+        }
+    }
+    exports.prepForInstallButton();
+    
+    async function promptInstall() {
+        const e = installEvent;
+        try {
+            if ( e ) {
+                installEvent = null;
+                e.prompt();
+                return await e.userChoice; // e.g. e.userChoice.outcome === 'accepted'
+            }
+            return {};
+        } finally {
+            installable.trigger(false);
+        }
+    }
+    
+    exports.InstallButton = class InstallButton {
+        constructor({node, icon='\u2193', label='Install App'}) {
+            //exports.prepForInstallButton();
+            installable.sub(b => { this.node.style.display = b ? '' : 'none'; });
+            this.node = node || document.createElement('button');
+            this.node.classList.add('installButton');
+            const btn = d3.select(this.node)
+                  .on('click', promptInstall)
+                  .style('display', installEvent ? '' : 'none');
+            btn.append('div')
+                .text(icon)
+                .classed('installButtonIcon', true);
+            btn.append('div')
+                .text(label);
+        }
+    };
+    
     return exports;
 });

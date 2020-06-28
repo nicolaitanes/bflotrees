@@ -221,7 +221,7 @@ define("main", ["domReady!", "mandelicu", "d3", "showdown"], (doc, mandelicu, d3
                 .text(d => '\u{1f4cc} '+d.common_name);
             const sel = this.mnu.select('#l3typeall')
                   .selectAll('option')
-                  .data(speciesActive, d => d.id)
+                  .data(speciesActive, d => d.id);
             sel.exit().remove();
             sel.enter().insert('option')
                 .property('value', d => d.id)
@@ -237,8 +237,13 @@ define("main", ["domReady!", "mandelicu", "d3", "showdown"], (doc, mandelicu, d3
         },
         async _update() {
             try {
-                const results = await api.query('species', {where: {revId: {$gt: state.speciesRev()}}});
                 const byId = state.species();
+                const maxId = byId.length - 1;
+                const [revised, novel] = await Promise.all([
+                    api.query('species', {where: {revId: {$gt: state.speciesRev()}}}),
+                    api.query('species', {where: {id: {$gt: maxId}}})
+                ]);
+                const results = revised.concat(novel);
                 let rev = state.speciesRev();
                 for (const item of results) {
                     byId[item.id] = item;
@@ -736,10 +741,10 @@ define("main", ["domReady!", "mandelicu", "d3", "showdown"], (doc, mandelicu, d3
         return pinHTML;
     };
 
-    const iconUrl = key => L.icon({
+    const iconUrl = (key, options={}) => L.icon(Object.assign({
         iconUrl: `js/images/marker-${key}.png`,
-        shadowUrl: 'js/images/marker-shadow.png'
-    });
+        shadowUrl: 'js/images/marker-shadow.png',
+    }, options));
     const map = {
         map: L.map( 'l3map', {
             center: [(state.lat0() + state.lat1())/2, (state.long0()+state.long1())/2],
@@ -748,6 +753,11 @@ define("main", ["domReady!", "mandelicu", "d3", "showdown"], (doc, mandelicu, d3
         }),
         markerIcons: [iconUrl('open'), iconUrl('icon')],
         markers: [],
+        centerMarker: null,
+        centerIcon: iconUrl('center', {
+            iconSize: [25, 25],
+            shadowUrl: ''
+        }),
         popped: false,
         _render() {
             this.markers.forEach(marker => this.map.removeLayer(marker));
@@ -778,7 +788,10 @@ define("main", ["domReady!", "mandelicu", "d3", "showdown"], (doc, mandelicu, d3
         init() {
             L.tileLayer( apis.openStreetMap, {
                 attribution: apis.openStreetMapAttr,
-                subdomains: ['a','b','c']
+                subdomains: ['a','b','c'],
+                minZoom: 10// , // would need to run own osm server and make hires tiles
+                // maxZoom: 20,
+                // maxNativeZoom: 20
             }).addTo(this.map);
             this.render = mandelicu.batchDelayed(() => this._render(), 600);
             state.ev.trees.sub(this.render);
@@ -805,6 +818,10 @@ define("main", ["domReady!", "mandelicu", "d3", "showdown"], (doc, mandelicu, d3
                 btnGeolocate.disabled = false;
             }
             map.map.panTo([coords.latitude, coords.longitude]);
+            map.centerMarker && map.map.removeLayer(map.centerMarker);
+            map.centerMarker = L.marker([coords.latitude, coords.longitude])
+                .setIcon(map.centerIcon)
+                .addTo(map.map);
         }, err => {
             btnGeolocate.classList.add('l3geofail');
             if ( enableHighAccuracy ) {
@@ -869,6 +886,11 @@ define("main", ["domReady!", "mandelicu", "d3", "showdown"], (doc, mandelicu, d3
                 screens.push(this);
             });
             state.introScreen((state.introScreen() + 1) % screens.length);
+            const btnInstall = d3.select(screens[0]).insert('button', 'p').style({
+                float: 'right',
+                margin: '1em'
+            }).node();
+            new mandelicu.InstallButton({node: btnInstall});
             let screenIndex = state.introScreen();
             if ( screens[screenIndex] ) {
                 screens[screenIndex].style.display = '';
@@ -913,7 +935,6 @@ define("main", ["domReady!", "mandelicu", "d3", "showdown"], (doc, mandelicu, d3
     };
 });
 
-// upload pics for note?
 // flag display -- consider third "my post was flagged" button
 
 // write notes on edible species

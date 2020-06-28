@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_VERSION = "v5";
+const CACHE_VERSION = "v7";
 const CACHE_PREFIX = 'trees_';
 const staticPaths = [ // make the first one small
     '/trees/trees-300px.png'
@@ -23,6 +23,7 @@ const dynPaths = [
     '/trees/js/mandelicu.js',
     '/trees/js/require.js',
     '/trees/js/showdown.js',
+    '/trees/js/images/marker-center.png',
     '/trees/js/images/marker-open.png',
     '/trees/js/images/marker-shadow.png',
     '/trees/js/images/marker-icon.png',
