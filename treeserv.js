@@ -9,7 +9,8 @@ define("treeserv", ["express", "body-parser", "mandu", "treedb", "upfile", "fs",
 
     router.get('/trees', async (req, res) => {
         try {
-            const {result} = await treedb.find(req.query.t || 'allTrees', JSON.parse(req.query.q));
+            const { attributes, ...q } = JSON.parse(req.query.q);
+            const {result} = await treedb.find(req.query.t || 'allTrees', q);
             res.json(result);
         } catch (err) {
             res.sendStatus(400);
@@ -17,7 +18,8 @@ define("treeserv", ["express", "body-parser", "mandu", "treedb", "upfile", "fs",
     });
     router.post('/trees', async (req, res) => {
         try {
-            const {result} = await treedb.find(req.body.t || 'allTrees', JSON.parse(req.body.q));
+            const { attributes, ...q } = req.body.q;
+            const {result} = await treedb.find(req.query.t || 'allTrees', q);
             res.json(result);
         } catch (err) {
             res.sendStatus(400);
@@ -25,7 +27,8 @@ define("treeserv", ["express", "body-parser", "mandu", "treedb", "upfile", "fs",
     });
     router.get('/tree', async (req, res) => {
         try {
-            const {result} = await treedb.findOne(req.query.t || 'allTrees', JSON.parse(req.query.q));
+            const { attributes, ...q } = JSON.parse(req.query.q);
+            const {result} = await treedb.findOne(req.query.t || 'allTrees', q);
             res.json(result);
         } catch (err) {
             res.sendStatus(400);
@@ -33,7 +36,8 @@ define("treeserv", ["express", "body-parser", "mandu", "treedb", "upfile", "fs",
     });
     router.post('/tree', async (req, res) => {
         try {
-            const {result} = await treedb.findOne(req.body.t || 'allTrees', JSON.parse(req.body.q));
+            const { attributes, ...q } = req.body.q;
+            const {result} = await treedb.findOne(req.body.t || 'allTrees', q);
             res.json(result);
         } catch (err) {
             res.sendStatus(400);
@@ -50,6 +54,11 @@ define("treeserv", ["express", "body-parser", "mandu", "treedb", "upfile", "fs",
         }
     }
 
+    function noattr(q) {
+        const { attributes, ...safe } = q;
+        return safe;
+    }
+
     router.setupWS = function setupWS() {
         router.ws("/ws", (ws, req) => {
             let session = null;
@@ -64,8 +73,8 @@ define("treeserv", ["express", "body-parser", "mandu", "treedb", "upfile", "fs",
             ws.on('close', onproblem);
             ws.on('error', onproblem);
             const routes = new mandu.WSRoutes(ws, {onsenderror, routes: {
-                find: ({tbl,q}) => stamp() || treedb.find(tbl || 'allTrees', q),
-                findOne: ({tbl,q}) => stamp() || treedb.find(tbl || 'allTrees', q),
+                find: ({tbl,q}) => stamp() || treedb.find(tbl || 'allTrees', noattr(q)),
+                findOne: ({tbl,q}) => stamp() || treedb.find(tbl || 'allTrees', noattr(q)),
                 screen: async ({screenId}) => {
                     const newSession = await new treedb.Session(screenId, msg => routes.sendJson(msg)).ready;
                     session && session.close();

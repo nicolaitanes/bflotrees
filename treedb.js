@@ -10,10 +10,12 @@ define("treedb", ["lodash", "node-fetch", 'node-uuid', "sequelize"], (_, fetch, 
     
     const Op = Sequelize.Op;
     const operatorsAliases = {
+        $gt: Op.gt,
+        $between: Op.between
+        /* former defaults, not needed by current client
         $eq: Op.eq,
         $ne: Op.ne,
         $gte: Op.gte,
-        $gt: Op.gt,
         $lte: Op.lte,
         $lt: Op.lt,
         $not: Op.not,
@@ -28,7 +30,6 @@ define("treedb", ["lodash", "node-fetch", 'node-uuid', "sequelize"], (_, fetch, 
         $notRegexp: Op.notRegexp,
         $iRegexp: Op.iRegexp,
         $notIRegexp: Op.notIRegexp,
-        $between: Op.between,
         $notBetween: Op.notBetween,
         $overlap: Op.overlap,
         $contains: Op.contains,
@@ -44,6 +45,7 @@ define("treedb", ["lodash", "node-fetch", 'node-uuid', "sequelize"], (_, fetch, 
         $all: Op.all,
         $values: Op.values,
         $col: Op.col
+        */
     };
     
     const sequelize = new Sequelize('trees', 'trees', 'nbknvdsanjoi', {

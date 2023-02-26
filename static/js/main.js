@@ -745,7 +745,7 @@ define("main", ["domReady!", "mandelicu", "d3", "showdown"], (doc, mandelicu, d3
         iconSize: [25, 41],
         shadowSize: [25, 41],
         iconAnchor: [12, 41],
-        shadowAnchor: [12, 41],
+        shadowAnchor: [6, 41],
         iconUrl: `js/images/marker-${key}.png`,
         shadowUrl: 'js/images/marker-shadow.png',
     }, options));
